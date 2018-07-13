@@ -1,0 +1,462 @@
+\documentclass[review]{elsarticle}
+
+\usepackage{amsmath}
+\usepackage{lineno,hyperref}
+\modulolinenumbers[5]
+\usepackage{subcaption}
+\usepackage{nicefrac}
+
+\journal{}
+
+%%%%%%%%%%%%%%%%%%%%%%%
+%% Elsevier bibliography styles
+%%%%%%%%%%%%%%%%%%%%%%%
+%% To change the style, put a % in front of the second line of the current style and
+%% remove the % from the second line of the style you would like to use.
+%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Numbered
+%\bibliographystyle{model1-num-names}
+
+%% Numbered without titles
+%\bibliographystyle{model1a-num-names}
+
+%% Harvard
+%\bibliographystyle{model2-names.bst}\biboptions{authoryear}
+
+%% Vancouver numbered
+%\usepackage{numcompress}\bibliographystyle{model3-num-names}
+
+%% Vancouver name/year
+%\usepackage{numcompress}\bibliographystyle{model4-names}\biboptions{authoryear}
+
+%% APA style
+%\bibliographystyle{model5-names}\biboptions{authoryear}
+
+%% AMA style
+%\usepackage{numcompress}\bibliographystyle{model6-num-names}
+
+%% `Elsevier LaTeX' style
+%\bibliographystyle{elsarticle-num}
+\bibliographystyle{elsarticle-num-names}
+\makeatletter
+\providecommand{\doi}[1]{%
+  \begingroup
+  \let\bibinfo\@secondoftwo
+  \urlstyle{rm}%
+  \href{http://dx.doi.org/#1}{%
+    doi:\discretionary{}{}{}%
+    \nolinkurl{#1}%
+  }%
+  \endgroup
+}
+\makeatother
+%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{Performance implications of modified wavenumber analysis for the piecewise parabolic method}
+%\tnotetext[mytitlenote]{Fully documented templates are available in the elsarticle package on \href{http://www.ctan.org/tex-archive/macros/latex/contrib/elsarticle}{CTAN}.}
+
+%% Group authors per affiliation:
+% \author{Elsevier\fnref{myfootnote}}
+% \address{Radarweg 29, Amsterdam}
+% \fntext[myfootnote]{Since 1880.}
+
+%% or include affiliations in footnotes:
+\author[mymainaddress]{Marc T. Henry de Frahan}
+\cortext[mycorrespondingauthor]{Corresponding author}
+\ead{marc.henrydefrahan@nrel.gov}
+
+\author[mymainaddress]{Ray W. Grout}
+
+\address[mymainaddress]{High Performance Algorithms and Complex Fluids, Computational Science, National Renewable Energy Laboratory, 15013 Denver W Pkwy, ESIF301, Golden, CO 80401}
+
+\begin{abstract}
+TODO
+\end{abstract}
+
+\begin{keyword}
+TBD \sep TBD
+\end{keyword}
+
+\end{frontmatter}
+
+\linenumbers
+
+\section{Introduction}
+
+In this work, we\dots
+
+This paper is organized as follows\dots
+
+\section{Modified wavenumber analysis}\label{sec:}
+
+In this work, we perform modified wavenumber analysis of the piecewise
+parabolic method (PPM)~\cite{Colella1984}, a second order finite
+volume method with parabolic solution profile reconstruction. The
+modified wavenumber analysis is performed for the linear advection
+equation,
+\begin{align}
+  \label{eq:linear_advection}
+  \frac{\partial u}{\partial t} + a \frac{\partial u}{\partial x} = 0,
+\end{align}
+subject to the initial condition $u(x,0) = u_0(x)$, and the advection
+velocity, $a$ is positive, without loss of generality. The solution is
+discretized according to finite volume methodologies and the cell
+average value of the solution at time $t^n$ in cell $j$ is
+\begin{align}
+  \label{eq:fv}
+  u^n_j = \frac{1}{\Delta x_j} \int_{x_{j-\nicefrac{1}{2}}}^{x_{j+\nicefrac{1}{2}}} u(x,t) \mathrm{d}x
+\end{align}
+where $\Delta x_j = x_{j+\nicefrac{1}{2}} - x_{j-\nicefrac{1}{2}}$ is
+the cell length, and $x_{j-\nicefrac{1}{2}}$ and
+$x_{j+\nicefrac{1}{2}}$ are the left and right cell edges. We will
+assume a uniform grid in this work, $\Delta x_j = h~\forall~j$. The
+discretized linear advection becomes
+\begin{align}
+  \label{eq:discrete_advection}
+  u^{n+1}_j = u^n_j + a \frac{\Delta t}{h} (f_{j-\nicefrac{1}{2}} - f_{j+\nicefrac{1}{2}}),
+\end{align}
+where $t^{n+1} = t^n + \Delta t$ and $f_{j-\nicefrac{1}{2}}$ and
+$f_{j+\nicefrac{1}{2}}$ are the cell interface fluxes. These are
+defined by the PPM as,
+\begin{align}
+  \label{eq:fluxes}
+  f_{j+\nicefrac{1}{2}} &= u_{R,j} - \frac{1}{2} \frac{a \Delta t}{h} \left( \Delta u_j - \left( 1-\frac{2}{3} \frac{a \Delta t}{h} \right) u_{6,j} \right),\\
+  f_{j-\nicefrac{1}{2}} &= u_{R,j-1} - \frac{1}{2} \frac{a \Delta t}{h} \left( \Delta u_{j-1} - \left( 1-\frac{2}{3} \frac{a \Delta t}{h} \right) u_{6,j-1} \right),
+\end{align}
+where, assuming $a>0$,
+\begin{align*}
+  u_{R,j} &= u_{j+\nicefrac{1}{2}} = \frac{7}{12} (u_j^n + u_{j+1}^n) - \frac{1}{12} (u_{j+2}^n + u_{j-1}^n),\\
+  u_{R,j-1} &= u_{j-\nicefrac{1}{2}} = \frac{7}{12} (u_{j-1}^n + u_{j}^n) - \frac{1}{12} (u_{j+1}^n + u_{j-2}^n),\\
+  \Delta u_j &= u_{R,j} - u_{L,j} = u_{R,j} - u_{R,j-1}\\
+  \Delta u_{j-1} &= u_{R,j-1} - u_{R,j-2}\\
+  u_{6,j} &= 6 \left( u_j^n - \frac{1}{2} (u_{R,j-1} + u_{R,j}) \right)\\
+  u_{6,j-1} &= 6 \left( u_{j-1}^n - \frac{1}{2} (u_{R,j-2} + u_{R,j-1}) \right).
+\end{align*}
+One of the particularities of this method is the appearance of the
+Courant number, $C = \nicefrac{a\Delta t}{h}$, in the spatial
+discretization formulation. This arises from integrating the parabolic
+solution profile across the cell interfaces over the time step
+$\Delta t$. As noted in the original PPM paper, this discretization
+results in a second order accurate method which becomes fourth order
+accurate in the limit of $\Delta t \to 0$~\cite{Colella1984}. We
+explore this explicit interaction between the time step and spatial
+discretizations on the solution accuracy using a modified wavenumber
+analysis.
+
+Let $u(x,t) = \exp{\left( i(kx-\omega t) \right)}$, where $k$ is the
+wavenumber, $\omega$ is the angular frequency, and
+$k = \nicefrac{\omega}{a} = \overline{\omega}$ satisfies
+Equation\,(\ref{eq:linear_advection}). Using the discrete version of
+this solution and substituting into the discrete partial differential
+equation, Equation\,(\ref{eq:discrete_advection}), we obtain an
+expression for $\overline{\omega}^*(kh)$, the discrete approximation
+to $\overline{\omega}$ that provides estimates of the dispersion,
+$\Re (\overline{\omega}^* h)$, and diffusion,
+$\Im (\overline{\omega}^* h)$, errors due to the numerical method.
+
+% compare the numerical performance of two codes in
+% simulating the decay of homogeneous isotropic turbulence.
+
+% A spectral code was used to perform a direct numerical simulation of
+% forced homogeneous isotropic turbulence at a Taylor microscale
+% Reynolds number of $Re_\lambda= \nicefrac{u_0' \lambda_0}{\nu}=133$,
+% where $u_0' = \sqrt{\nicefrac{\overline{u_i u_i}}{3}}$ is the initial
+% mean fluctuating velocity,
+% $\lambda_0 = \sqrt{\nicefrac{15 \nu}{\epsilon_0}}~u_0'$ is the initial
+% Taylor microscale, $\epsilon_0$ is the initial dissipation rate, and
+% $\nu$ is the kinematic viscosity. For the spectral code simulations,
+% $u_0'=\sqrt{2}$, $\epsilon_0=1.2$, and $\nu=0.0028$. The spectral code
+% solves the non-dimensional incompressible Navier-Stokes equations in
+% the vorticity formulation~\cite{Kim1987} using Fourier-Galerkin
+% spatial discretization. Time integration is performed with low-storage
+% explicit third order Runge-Kutta~\cite{Spalart1991}. The forcing used
+% to reach the steady state solution applies to large scales and
+% produces a specified energy injection rate~\cite{Mohan2017}. The
+% wavenumber resolution for the spectral code was $256^3$, at which
+% point the solution is converged. The steady state solution is used as
+% an initial condition for the decay of homogeneous isotropic turbulence
+% in both the spectral code and a compressible finite volume code,
+% PeleC.
+
+% PeleC is an explicit compressible Navier-Stokes flow solver based on
+% the AMReX library CITE. The spatial discretization is based on the
+% piecewise parabolic method, a second-order finite volume
+% method~\cite{Colella1984}. Time integration is performed using second
+% order Runge-Kutta. PeleC solves the compressible Navier-Stokes
+% equations in conservative form,
+% \begin{align*}
+%   &\frac{\partial\rho}{\partial t} + \frac{\partial }{\partial x_j} \left( \rho u_j \right) = 0,\\
+%   &\frac{\partial}{\partial t} \left( \rho u_i \right) + \frac{\partial}{\partial x_j} \left(\rho u_i u_j + p \delta_{ij} -\sigma_{ij} \right) = 0,\\
+%   &\frac{\partial}{\partial t} \left( \rho E \right) + \frac{\partial}{\partial x_j} \left( \left( \rho E+p \right) u_j + q_j - \sigma_{ij} u_i\right) = 0
+% \end{align*}
+% where $\rho$ is the density, $u_j$ is the velocity for the $x_j$
+% direction, $p$ is the pressure, $E = e + \frac{u_i u_i}{2}$ is the
+% total energy, $e = c_v T$ is the internal energy, $T$ is the
+% temperature, and $c_v$ is the heat capacity at constant volume. The ideal
+% gas equation of state with a ratio of specific heats, $\gamma$, set to
+% 1.4, is used to relate the thermodynamic variables. Additionally, the diffusive fluxes are
+% \begin{align*}
+%   &\sigma_{ij} = 2\mu S_{ij} - \frac{2}{3}\mu \delta_{ij} S_{kk}\\
+%   &q_j = -k \frac{\partial T}{\partial x_j}  
+% \end{align*}
+% where
+% $S_{ij} = \frac{1}{2}\left(\frac{\partial u_i}{\partial x_j} +
+%   \frac{\partial u_j}{\partial x_i} \right)$ is the strain-rate
+% tensor, $\mu$ is the dynamic viscosity, and $k$ is the thermal
+% conductivity. The turbulent Mach number, $M_t = \nicefrac{u'}{c_s}$,
+% where $u'$ is the mean fluctuating velocity field and $c_s$ is the
+% speed of sound, was initially set to $0.1$ to ensure a weakly
+% compressible flow and used to define the initial $u_0'$. The reference
+% temperature, $T_0$, and pressure, $p_0$, are 300K and 1
+% atmosphere. The Prandtl number, $Pr = \nicefrac{\mu c_p}{k}$, where
+% $c_p$ is the heat capacity at constant pressure, is set to $0.71$. The
+% Taylor microscale Reynolds number was set to match the spectral code
+% and used to define the dynamic viscosity. The three-dimensional domain
+% ranges from $[0,L]$, where $L=2\pi$, with periodic boundary
+% conditions. In both codes, the homogeneous isotropic turbulence is
+% decayed for approximately $20\tau$, where
+% $\tau=\nicefrac{\lambda_0}{u_0'}$.
+
+% To compute the initial condition for PeleC, the velocity fields from
+% the spectral code are integrated to compute a cell average in each
+% finite volume cell:
+% \begin{align*}
+%   \overline{u}_j^k = \frac{1}{V_k} \int_{V_k} u_j \mathrm{d}V_k
+% \end{align*}
+% where $V_k$ denotes the volume of cell $k$, and $\overline{u}_j^h$ is
+% the cell averaged solution in that cell. This integral is computed in
+% each cell using a three-dimensional second order gaussian quadrature
+% rule. To ensure an accurate representation of the flow field in the
+% finite volume discretization, we use an inverse non-uniform fast
+% Fourier transform to interpolate the spectral solution at each
+% quadrature node. For this work, a Python wrapper of the NUFFT library,
+% an $\mathcal{O}(N\log(N))$ implementation of the non-uniform
+% FFT~\cite{Greengard2004}, was extended to three-dimensional functions
+% to perform the gaussian quadrature
+% interpolation.\footnote{\url{https://github.com/dfm/python-nufft}}
+% This projection procedure was performed for all the uniform finite
+% volume grids used in this study: $32^3$, $64^3$, $128^3$, $256^3$,
+% $512^3$, $768^3$, and $1024^3$ cells. While the spectral flow
+% field is divergence-free, its projection on the finite volume grid is
+% not strictly divergence-free, though the divergence converges to zero
+% as the mesh is refined. This projection procedure ensures that an
+% accurate representation of the spectral solution is recovered in the
+% finite volume discretization space.
+
+% \section{Decay of homogeneous isotropic turbulence}\label{sec:}
+% In this section, we compare the temporal evolution of various metrics
+% from both the spectral code and PeleC. We denote
+% $\langle \cdot \rangle = \frac{1}{L^3} \int \cdot~\mathrm{d}\Omega$
+% the metrics that are volume averaged in the domain.
+
+% The decay of the mean kinetic energy,
+% $E_k = \nicefrac{\langle u_i u_i \rangle}{2}$ normalized by
+% $E_{k,0} = \nicefrac{3 u'^2_0}{2}$, is shown in
+% Figure\,\ref{fig:KE}. The kinetic energy decays to approximately 20\%
+% the initial value. For this quantity, simulations are converged at
+% $512^3$ and match the spectral simulation. Low resolution simulations
+% exhibit a sharp initial decrease in kinetic energy when the initial
+% small scales dissipate due to numerical diffusion.
+
+% The dilatation indicates that the initial velocity fields are not
+% divergence-free as noted previously, though it decreases to zero as
+% the resolution increases, Figure\,\ref{fig:dilatation}. For the
+% converged simulations, the small sharp initial increase in dilatation
+% indicates energy entering the acoustic modes. However, the dilatation
+% decreases thereafter and remains small throughout the simulations,
+% indicating that the simulations are essentially incompressible.
+
+% Temperature fluctuations, $T'=T-T_0$, illustrate that the simulations
+% remained approximately isothermal in time,
+% Figure\,\ref{fig:var_temp}. Temperature fluctuations are converged at
+% $512^3$ and remain very small at all times.
+
+% For lower resolution cases, the dissipation rate, calculated in
+% spectral space as $\epsilon = 2 \nu \sum k^2 E(k)$, exhibits a sharp
+% drop initially due to missing high wavenumber scales. As this is a
+% metric based on solution derivatives, convergence is only obtained at
+% $768^3$, instead of $512^3$ as reported for other metrics such as
+% kinetic energy, and matches the spectral solution at that
+% resolution. For converged solutions, the dissipation rate decreases
+% smoothly in time as smaller scales are dissipated and the inertial
+% range decreases. Due to the relationship between enstrophy and
+% dissipation rate for homogeneous flows, the temporal evolution of the
+% enstrophy exhibits the same conclusions.
+
+% Normalized velocity derivative moments,
+% $\nicefrac{\left\langle \left( \frac{\partial u_i}{\partial
+%         x_i}\right)^n \right\rangle}{\left\langle \left(
+%       \frac{\partial u_i}{\partial x_i}\right)^2
+%   \right\rangle^{\frac{n}{2}}}$, are shown in
+% Figure\,\ref{fig:ho_stats}, for the skewness ($n=3$) and the kurtosis
+% ($n=4$). Skewness is not converged at $768^3$ though it exhibits a
+% similar behavior as $1024^3$ until $t=15\tau$. The value of the
+% skewness for the higher resolution simulations is around $-0.5$, as
+% observed in other studies of turbulent
+% flows~\cite{Sreenivasan1997}. Kurtosis exhibits similar trends and
+% increasingly deviates from the Gaussian value of 3 as the resolution
+% increases, Figure\,\ref{fig:kurtosis}.
+
+% \begin{figure}[!tbp]%
+%   \centering%
+%   \begin{subfigure}[t]{0.48\textwidth}%
+%     \includegraphics[width=\textwidth]{./figs/KE.pdf}%
+%     \caption{Kinetic energy.}\label{fig:KE}%
+%   \end{subfigure}%
+%   \hfill%
+%   \begin{subfigure}[t]{0.48\textwidth}%
+%     \includegraphics[width=\textwidth]{./figs/dilatation.pdf}%
+%     \caption{Dilatation, $\theta = \nicefrac{\partial u_i}{\partial x_i}$.}\label{fig:dilatation}%
+%   \end{subfigure}\\%
+%   \begin{subfigure}[t]{0.48\textwidth}%
+%     \includegraphics[width=\textwidth]{./figs/var_temp.pdf}%
+%     \caption{Temperature fluctuations.}\label{fig:var_temp}%
+%   \end{subfigure}%
+%   \hfill%
+%   \begin{subfigure}[t]{0.48\textwidth}%
+%     \includegraphics[width=\textwidth]{./figs/dissipation.pdf}%
+%     \caption{Dissipation rate.}\label{fig:dissipation}%
+%   \end{subfigure}%
+%   \caption{Temporal evolution of metrics. Solid red: $32^3$; dashed
+%     green: $64^3$; dot-dashed blue: $128^3$; dotted orange: $256^3$;
+%     dot-dot-dashed purple: $512^3$; dotted burgundy: $768^3$; dotted
+%     magenta: $1024^3$; dashed black: spectral code.}\label{fig:metrics}%
+% \end{figure}%
+
+% \begin{figure}[!tbp]%
+%   \centering%
+%   \begin{subfigure}[t]{0.48\textwidth}%
+%     \includegraphics[width=\textwidth]{./figs/skewness.pdf}%
+%     \caption{Skewness.}\label{fig:skewness}%
+%   \end{subfigure}%
+%   \hfill%
+%   \begin{subfigure}[t]{0.48\textwidth}%
+%     \includegraphics[width=\textwidth]{./figs/kurtosis.pdf}%
+%     \caption{Kurtosis.}\label{fig:kurtosis}%
+%   \end{subfigure}%
+%   \caption{Temporal evolution of higher order statistics. Solid red: $32^3$; dashed
+%     green: $64^3$; dot-dashed blue: $128^3$; dotted orange: $256^3$;
+%     dot-dot-dashed purple: $512^3$; dotted burgundy: $768^3$; dotted
+%     magenta: $1024^3$.}\label{fig:ho_stats}%
+% \end{figure}%
+
+% % The mean fluctuating velocity decreases steadily over time as the
+% % eddies are dissipated. For this quantity, the simulations are
+% % converged at $512^3$. Low resolution simulations exhibit a sharp
+% % initial decrease in $u'$ when the initial small scales dissipate due
+% % to numerical diffusion.
+% % \begin{figure}[!tbp]%
+% %   \centering%
+% %   \includegraphics[width=0.45\textwidth]{./figs/urms.pdf}%
+% %   \caption{Velocity fluctuations as function of time. Solid red:
+% %     $32^3$; dashed green: $64^3$; dot-dashed blue: $128^3$; dotted
+% %     orange: $256^3$; dot-dot-dashed purple: $512^3$; dotted burgundy:
+% %     $768^3$; dotted magenta: $1024^3$; dashed black: spectral code.}\label{fig:urms}%
+% % \end{figure}%
+
+% \subsection{Energy spectrum}
+
+% The three-dimensional energy spectrum is defined as
+% \begin{align*}
+%   E(k) = \frac{1}{2} \int_S \phi_{ii}(k_0,k_1,k_2) \mathrm{d}S(k),
+% \end{align*}
+% where $k=\sqrt{k_0^2 + k_1^2 + k_2^2}$,
+% $\phi_{ii}(k_0,k_1,k_2) = \hat{u}_i(k_0,k_1,k_2)
+% \hat{u}_i(k_0,k_1,k_2)$ and is filtered so that only valid wavenumber
+% combinations are counted, and $\hat{\cdot}$ denotes the spectral
+% space. The integral is approximated by averaging
+% $\phi_{ii}(k_0,k_1,k_2)$ over a binned $k$ and multiplying by the
+% surface area of the sphere at $k$. The bins are defined by rounding
+% the wavenumber $k$ to the closest integer. An average of every $k$ in
+% each bin is then used as the reported value for that bin. The spectra
+% are calculated for the spectral code and PeleC simulations at
+% different resolutions.
+
+% Initial spectra and those at $t=5\tau$ and $10\tau$ are shown in
+% Figure\,\ref{fig:E3D}. The $768^3$ PeleC simulation presents a
+% converged energy spectrum and matches the spectral data. Energy at
+% wavenumbers larger than $k=128$ stays small and no energy pile-up is
+% observed. Lower resolution simulations exhibit significant
+% underpredictions of the energy at higher wavenumbers, due to numerical
+% diffusion acting at those scales. In order to present clearly the
+% inertial and dissipation range, the spectra are normalized according
+% to~\citet{Kerr1990}, Figure\,\ref{fig:enorm}. For the higher
+% resolution simulations, the initial inertial range is about one decade
+% and the normalized spectra is approximately 2, as noted
+% by~\citet{Kerr1990}, Figure\,\ref{fig:enorm0}. The dissipation range
+% starts at approximately $\eta k = 0.4$, where $\eta$ is the Kolmogorov
+% length scale, and is constant through the simulation time. The
+% inertial range itself decreases as a function of time as evidenced by
+% the decrease in the normalized spectra at low $\eta k$,
+% Figure\,\ref{fig:enorm10}.
+
+% \begin{figure}[!tbp]%
+%   \centering%
+%   \begin{subfigure}[t]{0.32\textwidth}%
+%     \includegraphics[width=\textwidth]{./figs/E3D0.pdf}%
+%     \caption{$t = 0\tau$.}\label{fig:E3D1}%
+%   \end{subfigure}%
+%   \hfill%
+%   \begin{subfigure}[t]{0.32\textwidth}%
+%     \includegraphics[width=\textwidth]{./figs/E3D5.pdf}%
+%     \caption{$t = 5\tau$.}\label{fig:E3D5}%
+%   \end{subfigure}%
+%   \hfill%
+%   \begin{subfigure}[t]{0.32\textwidth}%
+%     \includegraphics[width=\textwidth]{./figs/E3D10.pdf}%
+%     \caption{$t = 10\tau$.}\label{fig:E3D10}%
+%   \end{subfigure}%
+%   \caption{Three-dimensional energy spectra. Solid red: $32^3$; dashed
+%     green: $64^3$; dot-dashed blue: $128^3$; dotted orange: $256^3$;
+%     dot-dot-dashed purple: $512^3$; dotted burgundy: $768^3$; dotted
+%     magenta: $1024^3$; dashed black: spectral code.}\label{fig:E3D}%
+% \end{figure}%
+
+% \begin{figure}[!tbp]%
+%   \centering%
+%   \begin{subfigure}[t]{0.32\textwidth}%
+%     \includegraphics[width=\textwidth]{./figs/enorm0.pdf}%
+%     \caption{$t = 0\tau$.}\label{fig:enorm0}%
+%   \end{subfigure}%
+%   \hfill%
+%   \begin{subfigure}[t]{0.32\textwidth}%
+%     \includegraphics[width=\textwidth]{./figs/enorm5.pdf}%
+%     \caption{$t = 5\tau$.}\label{fig:enorm5}%
+%   \end{subfigure}%
+%   \hfill%
+%   \begin{subfigure}[t]{0.32\textwidth}%
+%     \includegraphics[width=\textwidth]{./figs/enorm10.pdf}%
+%     \caption{$t = 10\tau$.}\label{fig:enorm10}%
+%   \end{subfigure}%
+%   \caption{Normalized three-dimensional energy spectra according
+%   to~\cite{Kerr1990}. Solid red: $32^3$; dashed green: $64^3$;
+%   dot-dashed blue: $128^3$; dotted orange: $256^3$; dot-dot-dashed
+%   purple: $512^3$; dotted burgundy: $768^3$; dotted magenta:
+%   $1024^3$; dashed black: spectral code.}\label{fig:enorm}%
+% \end{figure}%
+
+% \section{Conclusion}\label{sec:ccl}
+% In this work, we performed numerical comparisons of a spectral code
+% with PeleC, a second order finite volume code for the compressible
+% Navier-Stokes equations. For integrated metrics such as kinetic
+% energy, PeleC simulations are converged at 4 points per wavelength or
+% twice the spectral code resolution. For higher order statistics such
+% as dissipation rate and spectra, simulations are converged at 6 points
+% per wavelength or three times the spectral code resolution.
+
+% This work, including data sets, demonstration notebooks, analysis
+% scripts, and figures, can be publicly accessed at CITE URL.
+
+\section*{Acknowledgments}
+This research was supported by the Exascale Computing Project (ECP), Project Number: 17-SC-20-SC, a collaborative effort of two DOE organizations -- the Office of Science and the National Nuclear Security Administration -- responsible for the planning and preparation of a capable exascale ecosystem -- including software, applications, hardware, advanced system engineering, and early testbed platforms -- to support the nation's exascale computing imperative.
+
+\section*{References}
+
+\bibliography{library}
+
+\end{document}
