@@ -6,14 +6,15 @@
 #
 # ========================================================================
 import numpy as np
+import argparse
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
 import matplotlib.colors as colors
-from matplotlib import _cntr as cntr
 from datetime import timedelta
 import time
 from scipy.optimize import minimize
 import scipy.integrate as integrate
+import scipy.interpolate as interpolate
 import pandas as pd
 
 # ========================================================================
@@ -121,6 +122,11 @@ if __name__ == "__main__":
     # Timer
     start = time.time()
 
+    # Parse arguments
+    parser = argparse.ArgumentParser(description="Temporal analysis optimizer")
+    parser.add_argument("-s", "--show", help="Show the plots", action="store_true")
+    args = parser.parse_args()
+
     # # Optimize the walltime for a given dispersion error
     # alphas = np.sort(np.concatenate([np.logspace(-6, 0, 50), np.linspace(3e-1, 1, 20)]))
     # df = pd.DataFrame(columns=["alpha", "CFL", "kh", "objective"])
@@ -219,22 +225,12 @@ if __name__ == "__main__":
 
     # Error(CFL,kh) and walltime(CFL,kh)
     hks = np.linspace(1e-2, np.pi, 100)
-    CFLs = np.linspace(1e-8, 1, 100)
-    hks, CFLs = np.meshgrid(hks, CFLs)
-    epsilon_error = epsilon([CFLs, hks])
-    gamma_error = gamma([CFLs, hks])
+    cfls = np.linspace(1e-8, 1, 100)
+    HKS, CFLS = np.meshgrid(hks, cfls)
+    epsilon_error = epsilon([CFLS, HKS])
+    gamma_error = gamma([CFLS, HKS])
     total_error = np.pi * epsilon_error + 2 * gamma_error
-    walltime = objective([CFLs, hks])
-
-    # Get the contour line for error = 1e-3
-    level = 1e-3
-    cs = cntr.Cntr(hks, CFLs, epsilon_error)
-    cs_res = cs.trace(level, level, 0)
-    segments, codes = cs_res[: len(cs_res) // 2], cs_res[len(cs_res) // 2 :]
-    cs_hk = segments[0][:, 0]
-    cs_cfl = segments[0][:, 1]
-    # plt.figure(10)
-    # plt.semilogy(cs_cfl, objective([cs_cfl, cs_hk]))
+    walltime = objective([CFLS, HKS])
 
     plt.figure(0)
     sc = plt.scatter(
@@ -286,7 +282,7 @@ if __name__ == "__main__":
         extent=extent,
         cmap="Blues_r",
     )
-    plt.contour(
+    cs = plt.contour(
         gamma_error, levels, colors="gray", origin="lower", extent=extent, linewidths=1
     )
     plt.plot(df.kh, df.CFL, color=cmap[-1], lw=2)
@@ -305,13 +301,35 @@ if __name__ == "__main__":
         extent=extent,
         cmap="Blues_r",
     )
-    plt.contour(
+    cs = plt.contour(
         total_error, levels, colors="gray", origin="lower", extent=extent, linewidths=1
     )
     plt.plot(df.kh, df.CFL, color=cmap[-1], lw=2)
     cbar = plt.colorbar(im)
     cbar.ax.get_yaxis().labelpad = 20
     cbar.set_label("total error", rotation=270, fontsize=18)
+
+    plt.figure(5)
+    extent = [0, np.pi, 0, 1]
+    levels = np.logspace(-6, 0, 13)
+    im = plt.imshow(
+        walltime,
+        aspect="auto",
+        interpolation="bilinear",
+        origin="lower",
+        extent=extent,
+        cmap="Blues_r",
+        norm=colors.LogNorm(),
+        vmin=1e-0,
+        vmax=1e3,
+    )
+    # cs = plt.contour(
+    #     total_error, levels, colors="gray", origin="lower", extent=extent, linewidths=1
+    # )
+    plt.plot(df.kh, df.CFL, color=cmap[-1], lw=2)
+    cbar = plt.colorbar(im)
+    cbar.ax.get_yaxis().labelpad = 20
+    cbar.set_label("walltime", rotation=270, fontsize=18)
 
     # \int error d(kh)
     int_cfl = np.linspace(1e-8, 1, 50)
@@ -323,10 +341,10 @@ if __name__ == "__main__":
         res = integrate.quad(lambda x: gamma([cfl, x]), 0, np.pi)
         int_gamma_error[k] = res[0]
 
-    plt.figure(5)
+    plt.figure(6)
     plt.plot(int_cfl, int_epsilon_error, color=cmap[0], lw=2)
 
-    plt.figure(6)
+    plt.figure(7)
     plt.plot(int_cfl, int_gamma_error, color=cmap[0], lw=2)
 
     # Format plots
@@ -372,6 +390,16 @@ if __name__ == "__main__":
 
     plt.figure(5)
     ax = plt.gca()
+    plt.xlabel(r"$kh$", fontsize=22, fontweight="bold")
+    plt.ylabel(r"CFL", fontsize=22, fontweight="bold")
+    plt.xlim([0, np.pi])
+    plt.ylim([0, 1.1])
+    plt.setp(ax.get_xmajorticklabels(), fontsize=18, fontweight="bold")
+    plt.setp(ax.get_ymajorticklabels(), fontsize=18, fontweight="bold")
+    plt.savefig("walltime.png", format="png", dpi=300)
+
+    plt.figure(6)
+    ax = plt.gca()
     plt.xlabel(r"CFL", fontsize=22, fontweight="bold")
     plt.ylabel(r"$\int \epsilon \mathrm{d}(hk)$", fontsize=22, fontweight="bold")
     plt.xlim([0, 1])
@@ -379,7 +407,7 @@ if __name__ == "__main__":
     plt.setp(ax.get_ymajorticklabels(), fontsize=18, fontweight="bold")
     plt.savefig("int_dispersion_error.png", format="png", dpi=300)
 
-    plt.figure(6)
+    plt.figure(7)
     ax = plt.gca()
     plt.xlabel(r"CFL", fontsize=22, fontweight="bold")
     plt.ylabel(r"$\int \gamma \mathrm{d}(hk)$", fontsize=22, fontweight="bold")
@@ -388,7 +416,8 @@ if __name__ == "__main__":
     plt.setp(ax.get_ymajorticklabels(), fontsize=18, fontweight="bold")
     plt.savefig("int_diffusion_error.png", format="png", dpi=300)
 
-    plt.show()
+    if args.show:
+        plt.show()
 
     # output timer
     end = time.time() - start

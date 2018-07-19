@@ -9,6 +9,7 @@ numpy = "*"
 matplotlib = "*"
 scipy = "*"
 pandas = "*"
+yt = "*"
 
 [dev-packages]
 
