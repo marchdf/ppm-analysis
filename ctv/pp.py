@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Get some turbulence statistics
+"""Post-process
 """
 
 # ========================================================================
@@ -10,12 +10,10 @@
 import os
 import argparse
 import numpy as np
-import matplotlib.pyplot as plt
 import yt
 import glob
 import pandas as pd
 import time
-import re
 from datetime import timedelta
 
 
@@ -43,14 +41,19 @@ def parse_ic(fname):
 def parse_output(fname):
     walltime = 0
     steps = 0
+    cfl = 0
+    dt = 0
     with open(fname, "r") as f:
         for line in f:
-            if "STEP =" in line:
+            if "Running " in line:
+                cfl = float(line.split()[6])
+                dt = float(line.split()[-1])
+            elif "STEP =" in line:
                 steps = max(steps, int(line.split()[2]))
             elif "Run time w/o init =" in line:
                 walltime = float(line.split()[-1])
 
-    return walltime, steps
+    return walltime, steps, cfl, dt
 
 
 # ========================================================================
@@ -65,7 +68,6 @@ if __name__ == "__main__":
 
     # Parse arguments
     parser = argparse.ArgumentParser(description="A simple post-processing tool")
-    parser.add_argument("-s", "--show", help="Show the plots", action="store_true")
     args = parser.parse_args()
 
     # Setup
@@ -86,8 +88,8 @@ if __name__ == "__main__":
         # Initial conditions
         ics = parse_ic(os.path.join(fdir, "ic.txt"))
 
-        # Get walltime and number of steps
-        walltime, steps = parse_output(os.path.join(fdir, oname))
+        # Get walltime, number of steps, cfl
+        walltime, steps, cfl, dt = parse_output(os.path.join(fdir, oname))
 
         # Get plt directories
         pltdirs = sorted(glob.glob(os.path.join(fdir, "plt*")))
@@ -119,6 +121,7 @@ if __name__ == "__main__":
         low = ds.domain_left_edge
         L = (ds.domain_right_edge - ds.domain_left_edge).d
         N = ds.domain_dimensions * ref
+        dx = ds.index.get_smallest_dx().d
         cube = ds.covering_grid(
             max_level,
             left_edge=low,
@@ -136,27 +139,24 @@ if __name__ == "__main__":
         ) * np.cos(ics["omega_z"] * zmt / ics["L"])
 
         # Calculate the L2 error norm
-        error0 = np.sqrt(np.mean((u_0 - u_e0) ** 2))
-        error = np.sqrt(np.mean((u_f - u_ef) ** 2))
+        e0 = np.sqrt(np.mean((u_0 - u_e0) ** 2))
+        ef = np.sqrt(np.mean((u_f - u_ef) ** 2))
         lst.append(
             {
                 "N": N[0],
-                "L20": error0,
-                "L2": error,
+                "L20": e0,
+                "L2": ef,
                 "walltime": walltime,
                 "steps": steps,
+                "dx": dx,
+                "dt": dt,
+                "cfl": cfl,
             }
         )
 
     # Concatenate all errors
     df = pd.DataFrame(lst)
-    print(df)
-
-    # # Plot
-    # plt.figure(0)
-    # plt.plot(df.walltime, df.L2)
-    # if args.show:
-    #     plt.show()
+    df.to_csv("errors.csv", index=False)
 
     # output timer
     end = time.time() - start

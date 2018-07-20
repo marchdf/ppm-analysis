@@ -60,11 +60,12 @@ if __name__ == "__main__":
 
             # Calculate fixed time step
             dt = cfl * 2. / (ncell * umax)
-            status = "Running {0:d} cells at CFL={1:f} (DT = {2:e})".format(
+            status = "Running {0:d} cells at CFL = {1:f} DT = {2:e}".format(
                 ncell, cfl, dt
             )
             print(status)
             log.write(status + "\n")
+            log.flush()
 
             # Run Pele
             os.chdir(rundir)
