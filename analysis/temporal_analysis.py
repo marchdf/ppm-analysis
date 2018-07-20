@@ -93,6 +93,7 @@ if __name__ == "__main__":
     # Setup
     N = 100
     hks = np.linspace(-1 * np.pi, np.pi, N)
+    fmt = "png"
 
     # ========================================================================
     # 2nd order upwind FV
@@ -211,7 +212,7 @@ if __name__ == "__main__":
             np.real(ppm_homegas),
             lw=2,
             color=cmap[i + 1],
-            label="PPM (CFL={0:.1f})".format(smp.N(CFL)),
+            label="PPM (C={0:.1f})".format(smp.N(CFL)),
         )
         p[0].set_dashes(dashseq[i + 1])
 
@@ -221,7 +222,7 @@ if __name__ == "__main__":
             np.imag(ppm_homegas),
             lw=2,
             color=cmap[i + 1],
-            label="PPM (CFL={0:.1f})".format(smp.N(CFL)),
+            label="PPM (C={0:.1f})".format(smp.N(CFL)),
         )
         p[0].set_dashes(dashseq[i + 1])
 
@@ -231,7 +232,7 @@ if __name__ == "__main__":
             dispersion_error,
             lw=2,
             color=cmap[i + 1],
-            label="PPM (CFL={0:.1f})".format(smp.N(CFL)),
+            label="PPM (C={0:.1f})".format(smp.N(CFL)),
         )
         p[0].set_dashes(dashseq[i + 1])
 
@@ -241,7 +242,7 @@ if __name__ == "__main__":
             diffusion_error,
             lw=2,
             color=cmap[i + 1],
-            label="PPM (CFL={0:.1f})".format(smp.N(CFL)),
+            label="PPM (C={0:.1f})".format(smp.N(CFL)),
         )
         p[0].set_dashes(dashseq[i + 1])
 
@@ -271,7 +272,7 @@ if __name__ == "__main__":
     plt.axis("equal")
     plt.setp(ax.get_xmajorticklabels(), fontsize=18, fontweight="bold")
     plt.setp(ax.get_ymajorticklabels(), fontsize=18, fontweight="bold")
-    plt.savefig("temporal_wavenumber.png", format="png", dpi=300)
+    plt.savefig("temporal_wavenumber.{0:s}".format(fmt), format=fmt, dpi=300)
 
     plt.figure(1)
     ax = plt.gca()
@@ -282,7 +283,7 @@ if __name__ == "__main__":
     legend = ax.legend(loc="best")
     plt.setp(ax.get_xmajorticklabels(), fontsize=18, fontweight="bold")
     plt.setp(ax.get_ymajorticklabels(), fontsize=18, fontweight="bold")
-    plt.savefig("temporal_dispersion.png", format="png", dpi=300)
+    plt.savefig("temporal_dispersion.{0:s}".format(fmt), format=fmt, dpi=300)
 
     plt.figure(2)
     ax = plt.gca()
@@ -293,7 +294,7 @@ if __name__ == "__main__":
     legend = ax.legend(loc="best")
     plt.setp(ax.get_xmajorticklabels(), fontsize=18, fontweight="bold")
     plt.setp(ax.get_ymajorticklabels(), fontsize=18, fontweight="bold")
-    plt.savefig("temporal_diffusion.png", format="png", dpi=300)
+    plt.savefig("temporal_diffusion.{0:s}".format(fmt), format=fmt, dpi=300)
 
     plt.figure(3)
     ax = plt.gca()
@@ -304,7 +305,7 @@ if __name__ == "__main__":
     legend = ax.legend(loc="best")
     plt.setp(ax.get_xmajorticklabels(), fontsize=18, fontweight="bold")
     plt.setp(ax.get_ymajorticklabels(), fontsize=18, fontweight="bold")
-    plt.savefig("temporal_dispersion_error.png", format="png", dpi=300)
+    plt.savefig("temporal_dispersion_error.{0:s}".format(fmt), format=fmt, dpi=300)
 
     plt.figure(4)
     ax = plt.gca()
@@ -315,7 +316,7 @@ if __name__ == "__main__":
     legend = ax.legend(loc="best")
     plt.setp(ax.get_xmajorticklabels(), fontsize=18, fontweight="bold")
     plt.setp(ax.get_ymajorticklabels(), fontsize=18, fontweight="bold")
-    plt.savefig("temporal_diffusion_error.png", format="png", dpi=300)
+    plt.savefig("temporal_diffusion_error.{0:s}".format(fmt), format=fmt, dpi=300)
 
     # plt.show()
 

@@ -127,6 +127,9 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--show", help="Show the plots", action="store_true")
     args = parser.parse_args()
 
+    # Setup
+    fmt = "png"
+
     # # Optimize the walltime for a given dispersion error
     # alphas = np.sort(np.concatenate([np.logspace(-6, 0, 50), np.linspace(3e-1, 1, 20)]))
     # df = pd.DataFrame(columns=["alpha", "CFL", "kh", "objective"])
@@ -302,7 +305,13 @@ if __name__ == "__main__":
         cmap="Blues_r",
     )
     cs = plt.contour(
-        total_error, levels, colors="gray", origin="lower", extent=extent, linewidths=1
+        total_error,
+        levels,
+        colors="gray",
+        origin="lower",
+        extent=extent,
+        linewidths=1,
+        linestyles="dashed",
     )
     plt.plot(df.kh, df.CFL, color=cmap[-1], lw=2)
     cbar = plt.colorbar(im)
@@ -351,70 +360,70 @@ if __name__ == "__main__":
     plt.figure(0)
     ax = plt.gca()
     plt.xlabel(r"$kh$", fontsize=22, fontweight="bold")
-    plt.ylabel(r"CFL", fontsize=22, fontweight="bold")
+    plt.ylabel(r"$C$", fontsize=22, fontweight="bold")
     plt.xlim([0, np.pi])
     plt.ylim([0, 1.1])
     plt.setp(ax.get_xmajorticklabels(), fontsize=18, fontweight="bold")
     plt.setp(ax.get_ymajorticklabels(), fontsize=18, fontweight="bold")
-    plt.savefig("pareto_dispersion.png", format="png", dpi=300)
+    plt.savefig("pareto_dispersion.{0:s}".format(fmt), format=fmt, dpi=300)
 
     plt.figure(1)
     ax = plt.gca()
     plt.xlabel(r"$kh$", fontsize=22, fontweight="bold")
-    plt.ylabel(r"CFL", fontsize=22, fontweight="bold")
+    plt.ylabel(r"$C$", fontsize=22, fontweight="bold")
     plt.xlim([0, np.pi])
     plt.ylim([0, 1.1])
     plt.setp(ax.get_xmajorticklabels(), fontsize=18, fontweight="bold")
     plt.setp(ax.get_ymajorticklabels(), fontsize=18, fontweight="bold")
-    plt.savefig("pareto_dispersion2.png", format="png", dpi=300)
+    plt.savefig("pareto_dispersion2.{0:s}".format(fmt), format=fmt, dpi=300)
 
     plt.figure(3)
     ax = plt.gca()
     plt.xlabel(r"$kh$", fontsize=22, fontweight="bold")
-    plt.ylabel(r"CFL", fontsize=22, fontweight="bold")
+    plt.ylabel(r"$C$", fontsize=22, fontweight="bold")
     plt.xlim([0, np.pi])
     plt.ylim([0, 1.1])
     plt.setp(ax.get_xmajorticklabels(), fontsize=18, fontweight="bold")
     plt.setp(ax.get_ymajorticklabels(), fontsize=18, fontweight="bold")
-    plt.savefig("pareto_diffusion.png", format="png", dpi=300)
+    plt.savefig("pareto_diffusion.{0:s}".format(fmt), format=fmt, dpi=300)
 
     plt.figure(4)
     ax = plt.gca()
     plt.xlabel(r"$kh$", fontsize=22, fontweight="bold")
-    plt.ylabel(r"CFL", fontsize=22, fontweight="bold")
+    plt.ylabel(r"$C$", fontsize=22, fontweight="bold")
     plt.xlim([0, np.pi])
     plt.ylim([0, 1.1])
     plt.setp(ax.get_xmajorticklabels(), fontsize=18, fontweight="bold")
     plt.setp(ax.get_ymajorticklabels(), fontsize=18, fontweight="bold")
-    plt.savefig("total_error.png", format="png", dpi=300)
+    plt.savefig("total_error.{0:s}".format(fmt), format=fmt, dpi=300)
 
     plt.figure(5)
     ax = plt.gca()
     plt.xlabel(r"$kh$", fontsize=22, fontweight="bold")
-    plt.ylabel(r"CFL", fontsize=22, fontweight="bold")
+    plt.ylabel(r"$C$", fontsize=22, fontweight="bold")
     plt.xlim([0, np.pi])
     plt.ylim([0, 1.1])
     plt.setp(ax.get_xmajorticklabels(), fontsize=18, fontweight="bold")
     plt.setp(ax.get_ymajorticklabels(), fontsize=18, fontweight="bold")
-    plt.savefig("walltime.png", format="png", dpi=300)
+    plt.savefig("walltime.{0:s}".format(fmt), format=fmt, dpi=300)
 
     plt.figure(6)
     ax = plt.gca()
-    plt.xlabel(r"CFL", fontsize=22, fontweight="bold")
+    plt.xlabel(r"$C$", fontsize=22, fontweight="bold")
     plt.ylabel(r"$\int \epsilon \mathrm{d}(hk)$", fontsize=22, fontweight="bold")
     plt.xlim([0, 1])
     plt.setp(ax.get_xmajorticklabels(), fontsize=18, fontweight="bold")
     plt.setp(ax.get_ymajorticklabels(), fontsize=18, fontweight="bold")
-    plt.savefig("int_dispersion_error.png", format="png", dpi=300)
+    plt.savefig("int_dispersion_error.{0:s}".format(fmt), format=fmt, dpi=300)
 
     plt.figure(7)
     ax = plt.gca()
-    plt.xlabel(r"CFL", fontsize=22, fontweight="bold")
+    plt.xlabel(r"$C$", fontsize=22, fontweight="bold")
     plt.ylabel(r"$\int \gamma \mathrm{d}(hk)$", fontsize=22, fontweight="bold")
     plt.xlim([0, 1])
     plt.setp(ax.get_xmajorticklabels(), fontsize=18, fontweight="bold")
     plt.setp(ax.get_ymajorticklabels(), fontsize=18, fontweight="bold")
-    plt.savefig("int_diffusion_error.png", format="png", dpi=300)
+    plt.savefig("int_diffusion_error.{0:s}".format(fmt), format=fmt, dpi=300)
 
     if args.show:
         plt.show()
